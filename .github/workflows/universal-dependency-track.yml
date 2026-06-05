@@ -120,15 +120,17 @@ jobs:
           echo "✅ Dependency installation complete"
         continue-on-error: true
 
-      - name: Install Trivy
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-
       - name: Generate SBOM with Trivy
-        run: |
-          echo "🔍 Scanning repository for dependencies and licenses..."
-          trivy fs --format cyclonedx --scanners license --license-full . -o bom-raw.json
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          format: cyclonedx
+          output: bom-raw.json
+          scanners: license
+          license-full: true
 
+      - name: Clean and prepare SBOM
+        run: |
           echo "🧹 Cleaning SBOM (removing lock files and false positives)..."
           cat bom-raw.json | jq '
             .components |= map(select(
