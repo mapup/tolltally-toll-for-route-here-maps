@@ -1,61 +1,61 @@
-# toll-here-maps
-Click on the folders above to see examples to extend mapping capabilities of Here by adding toll information from [**TollGuru**](https://tollguru.com/) to the route information from Here.
+# TollTally - Toll for Route (HERE Maps)
 
-## Environment Setup
+This repository provides examples and tools to extend the mapping capabilities of **HERE Maps** by adding toll information from [**TollGuru**](https://tollguru.com/) to the route information.
 
-This project uses a **centralized `.env` file** at the root level that is shared across all implementations (JavaScript, Python, Ruby).
+## Architecture
+- **Multi-language support**: Implementations available in JavaScript, Python, and Ruby.
+- **Root Configuration**: Centralized `.env` file at the root level shared across all implementations.
+- **Routing Integration**: Geocodes addresses and fetches route polylines/actions using HERE Maps Routing API (v8).
+- **Toll Calculation**: Integrates with TollGuru's `complete-polyline-from-mapping-service` endpoint.
+- **Time-aware Tolls**: Automatically generates `locTimes` from HERE Maps route metadata for accurate time-based toll rates.
+- **Flexible Polyline Support**: Handles HERE Maps specific flex-polyline encoding/decoding.
+- **Standardized I/O**: Uses `input.json` for requests and `output.json` for results across all languages.
+- **Detailed Docs**: See [Architecture](docs/architecture.md) for more details on services and datastores.
 
-### Create `.env` file at the root directory:
+## Prerequisites
+- API Keys:
+  - **TollGuru API Key**: [Get it here](https://tollguru.com/developers/get-api-key)
+  - **HERE Maps API Key**: [Get it here](https://developer.here.com/)
+- Runtimes:
+  - Node.js (for JavaScript)
+  - Python 3.x (for Python)
+  - Ruby (for Ruby)
 
-```bash
-# In the root directory (toll-for-route-from-mapping-service-here-maps/)
-# Create a .env file with your API keys:
+## Local Setup
+1. Clone the repository.
+2. Create a `.env` file in the **root directory**:
+   ```bash
+   TOLLGURU_API_KEY=your_tollguru_api_key_here
+   HERE_API_KEY=your_here_maps_api_key_here
+   ```
+3. Install dependencies for your preferred language:
+   - **JavaScript**: `cd javascript && npm install`
+   - **Python**: `cd python && pip install -r requirements.txt`
+   - **Ruby**: `cd ruby && bundle install`
 
-TOLLGURU_API_KEY=your_tollguru_api_key_here
-HERE_API_KEY=your_here_maps_api_key_here
-```
+## How to Run Tests
+Each language folder contains its own testing suite:
+- **JavaScript**: Run `node index.js` (uses `input.json`).
+- **Python**: Run `python Testing/Test_Here_Maps.py`.
+- **Ruby**: Run `ruby TestCases/test_ruby.rb`.
 
-**Important:**
-- The `.env` file is already added to `.gitignore` and should **never** be committed to version control
-- All folders (javascript, python, ruby) will automatically load credentials from this single `.env` file
-- Get your TollGuru API key from: https://tollguru.com/developers/get-api-key
-- Get your HERE Maps API key from: https://developer.here.com/
+## How to Deploy
+These scripts are intended for integration into larger applications or as standalone utilities. To deploy:
+1. Ensure API keys are provided via environment variables.
+2. Integrate the language-specific logic into your backend service.
 
-The toll information has following [key features](https://tollguru.com/developers/features):
-### Support for [geographies](https://github.com/mapup/tollguru_country_coverage/wiki/Countries-supported-by-TollGuru) 
-* North America - Bahamas, Belize, Canada, Costa Rica, Cuba, Dominican Republic, Guatemala, Honduras, Jamaica, Mexico, Panama, Puerto Rico, United States of America
-* Europe - Albania, Andorra, Austria, Belarus, Belgium, Bosnia and Herzegovina, Bulgaria, Croatia, Czechia, Denmark, Estonia, France, Germany, Greece, Hungary, Iceland, Ireland, Italy, Latvia, Lithuania, Luxembourg, Moldova, Montenegro, Netherlands, North Macedonia, Norway, Poland, Portugal, Romania, Russia, Serbia, Slovakia, Slovenia, Spain, Sweden, Switzerland, Turkey, United Kingdom
-* Australia - Australia, New Zealand
-* Asia - Brunei, India, Indonesia, Malaysia, Philippines, Singapore, Taiwan, Thailand, Vietnam
-* Latin America - Argentina, Bolivia, Brazil, Chile, Colombia, Ecuador, Guyana, Paraguay, Peru, Uruguay, Venezuela
+## Configuration
+- **Location**: Root `.env` file for API keys.
+- **Runtime Config**: `javascript/input.json` (for JS) or language-specific test CSVs.
 
-### Based on vehicles in use in each country, [vehicle type support](https://github.com/mapup/tollguru_vehicle_coverage/wiki/Vehicle-types-supported-by-TollGuru)
-* Car, SUV or Pickup truck. You can specify number of axles including axles in trailers
-* Carpool
-* Taxi
-* Rideshare
-* Motorcycle
-* Truck
-* Bus
-* Recreational vehicle (RV), motorhome, caravan, van
+## Known Limitations
+- Requires active API keys for both HERE Maps and TollGuru.
+- Dependent on HERE Maps Routing API v8 response structure.
 
-### Rates for all the available payment options in local currencies
-* Tag transponder (including primary and secondary transponders)
-* cash
-* licence plate
-* credit card
-* prepaid
+## Product Features
+Support for [geographies](https://github.com/mapup/tollguru_country_coverage/wiki/Countries-supported-by-TollGuru), [vehicle types](https://github.com/mapup/tollguru_vehicle_coverage/wiki/Vehicle-types-supported-by-TollGuru), and [payment options](https://tollguru.com/developers/features).
 
-### Time based tolls
-You can specify "departure_time" as DateTime (string) or Timestamp (number) to provide you with most accurate toll rates based on time of day/week/month/year, including tolls for express lanes where tolls change as quickly as every five minutes
-
-### All types of toll systems
-Support for barrier, ticket system and distance based tolling configurations
-
-### Support for [all map services](https://github.com/mapup)
-[See the Mapping services list](https://github.com/mapup/toll-here-maps/wiki/2.-Map-platform-service-supported-by-TollGuru) for all mapping platforms supported. You can edit the **source** argument to send polyline from another mapping service.
-
-### Support for trucks based on [height, weight, harardous goods, etc.](https://github.com/mapup/toll-here-maps/wiki/4.-Truck-parameters-supported-by-TollGuru)
-You can receive tolls based on vehicle height, weight etc., while calculating toll: "truckType","shippedHazardousGoods","tunnelCategory","truckRestrictionPenalty" and [more](https://github.com/mapup/toll-here-maps/wiki/4.-Truck-parameters-supported-by-TollGuru).
-
-For more examples of the different ways in which the responses from this endpoint can be configured, you can refer to: [Our API parameter examples repository.](https://github.com/mapup/tollguru-api-parameter-examples/tree/main/request-bodies/02-Complete-Polyline-To-Toll)
+---
+### Documentation
+- [Architecture Details](docs/architecture.md)
+- [Runbook / Operations](docs/runbook.md)
