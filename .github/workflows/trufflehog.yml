@@ -34,13 +34,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
       - name: Install TruffleHog
+        env:
+          # Pinned release + published SHA-256, instead of piping the upstream
+          # install.sh straight into a shell: a hijacked URL or a compromised
+          # upstream repo would otherwise run arbitrary code on the runner.
+          # Bump both values together from
+          # https://github.com/trufflesecurity/trufflehog/releases
+          TRUFFLEHOG_VERSION: 3.97.1
+          TRUFFLEHOG_SHA256: f863ea3a8d786f7d097870496c977944cce7372a2fe1e56707d965016e543ece
         run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+          set -euo pipefail
+          archive="trufflehog_${TRUFFLEHOG_VERSION}_linux_amd64.tar.gz"
+          curl -sSfL -o "$archive" \
+            "https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/${archive}"
+          echo "${TRUFFLEHOG_SHA256}  ${archive}" | sha256sum -c -
+          tar -xzf "$archive" trufflehog
+          sudo install -m 0755 trufflehog /usr/local/bin/trufflehog
+          rm -f "$archive" trufflehog
+          trufflehog --version
 
       - name: Run TruffleHog
         run: |
@@ -56,6 +72,7 @@ jobs:
         env:
           DOJO_URL: ${{ secrets.DEFECTDOJO_URL }}
           DOJO_API_KEY: ${{ secrets.DEFECTDOJO_API_KEY }}
+          REPO_NAME: ${{ github.event.repository.name }}
         run: |
           if [ -z "$DOJO_URL" ] || [ -z "$DOJO_API_KEY" ]; then
             echo "DEFECTDOJO_URL/DEFECTDOJO_API_KEY not set — skipping upload."
@@ -67,7 +84,7 @@ jobs:
           fi
           curl -sS -X POST "$DOJO_URL/api/v2/reimport-scan/" \
             -H "Authorization: Token $DOJO_API_KEY" \
-            -F "product_name=${{ github.event.repository.name }}" \
+            -F "product_name=$REPO_NAME" \
             -F "product_type_name=Research and Development" \
             -F "engagement_name=CI Secret Verification" \
             -F "scan_type=Trufflehog Scan" \
@@ -81,7 +98,7 @@ jobs:
 
       - name: Archive TruffleHog report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: trufflehog-report
           path: trufflehog-report.json
