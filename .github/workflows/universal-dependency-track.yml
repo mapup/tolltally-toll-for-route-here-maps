@@ -169,9 +169,9 @@ jobs:
       - name: Upload BOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@48feab3080ff9e8f51f4d21861d9fc914eb744f5 # v3.1.0
         with:
-          serverhostname: '44.194.0.211'
-          port: '8091'
-          protocol: 'http'
+          serverhostname: 'deptrack-api.mapup.ai'
+          port: '443'
+          protocol: 'https'
           apikey: ${{ secrets.DEPENDENCYTRACK_API_KEY }}
           projectname: ${{ github.event.repository.name }}
           projectversion: 'main'
