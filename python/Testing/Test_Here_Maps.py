@@ -234,12 +234,17 @@ def get_rates_from_tollguru(polyline, loc_times=None, vehicle_type="2AxlesAuto")
 from csv import reader, writer
 import time
 
+# Resolve the test case files next to this script, so the runner works from any
+# working directory (the README runs it as `python Testing/Test_Here_Maps.py`)
+TEST_CASES_FILE = Path(__file__).parent / "testCases.csv"
+RESULT_FILE = Path(__file__).parent / "testCases_result.csv"
+
 print("=" * 60)
 print("Starting toll calculation tests...")
 print("=" * 60)
 
 temp_list = []
-with open("testCases.csv", "r") as f:
+with open(TEST_CASES_FILE, "r") as f:
     csv_reader = reader(f)
     for count, i in enumerate(csv_reader):
         # if count>2:
@@ -255,6 +260,10 @@ with open("testCases.csv", "r") as f:
             )
         else:
             print(f"\n[Test {count}] {i[1]} → {i[2]}")
+
+            # Reset per test case, so a failed route never reuses the previous one
+            polyline = None
+            loc_times = None
 
             try:
                 # Get vehicle type from CSV (index 4), default to 2AxlesAuto if not provided
@@ -288,19 +297,21 @@ with open("testCases.csv", "r") as f:
             except Exception as e:
                 print(f"  ❌ Routing Error: {e}")
                 i.append("Routing Error")
-                loc_times = None
 
             start = time.time()
-            try:
-                # Pass locTimes and vehicle_type to Tollguru API
-                rates = get_rates_from_tollguru(polyline, loc_times, vehicle_type)
-            except Exception as e:
-                i.append(False)
-                rates = {}
+            rates = {}
+            # Without a polyline for this route there is nothing to price
+            if polyline is not None:
+                try:
+                    # Pass locTimes and vehicle_type to Tollguru API
+                    rates = get_rates_from_tollguru(polyline, loc_times, vehicle_type)
+                except Exception as e:
+                    rates = {}
             time_taken = time.time() - start
 
             if rates == {}:
-                i.append((None, None))
+                # Two cells, one per cost column, to stay aligned with the header
+                i.extend((None, None))
             else:
                 try:
                     tag = rates["tag"]
@@ -316,12 +327,12 @@ with open("testCases.csv", "r") as f:
         # print(f"{len(i)}   {i}\n")
         temp_list.append(i)
 
-with open("testCases_result.csv", "w") as f:
+with open(RESULT_FILE, "w") as f:
     writer(f).writerows(temp_list)
 
 print("\n" + "=" * 60)
 print(f"Testing complete! Processed {len(temp_list) - 1} test cases.")
-print(f"Results saved to: testCases_result.csv")
+print(f"Results saved to: {RESULT_FILE}")
 print("=" * 60)
 
 """Testing Ends"""
