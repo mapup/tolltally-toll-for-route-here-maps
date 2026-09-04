@@ -9,6 +9,10 @@ name: Dependency Track SBOM Scan
 # CycloneDX SBOM in license mode) and Dependency-Track (receives it).
 #
 # Required secret: DEPENDENCYTRACK_API_KEY
+#
+# LOCAL DEVIATION FROM THE TEMPLATE: the SBOM normalisation step below calls
+# .github/scripts/normalize-sbom.jq with .github/license-overrides.json. Carry
+# both files along when syncing this workflow, or drop that step.
 
 on:
   # No branch filters: repos differ in default-branch names. Pushes are
@@ -142,22 +146,10 @@ jobs:
 
       - name: Clean and validate SBOM
         run: |
-          echo "🧹 Cleaning SBOM (removing lock files and false positives)..."
-          cat bom-raw.json | jq '
-            .components |= map(select(
-              .name != "package-lock.json" and
-              .name != "yarn.lock" and
-              .name != "pnpm-lock.yaml" and
-              .name != "go.mod" and
-              .name != "go.sum" and
-              .name != "uv.lock" and
-              .name != "poetry.lock" and
-              .name != "Pipfile.lock" and
-              .name != "Cargo.lock" and
-              .name != "composer.lock" and
-              (.name | test(".*lock\\.json$") | not)
-            ))
-          ' > bom.json
+          echo "🧹 Normalising SBOM (dropping manifest files, filling licence gaps)..."
+          jq --slurpfile ov .github/license-overrides.json \
+             -f .github/scripts/normalize-sbom.jq \
+             bom-raw.json > bom.json
 
           echo ""
           echo "📊 SBOM Statistics:"
@@ -165,6 +157,14 @@ jobs:
               totalComponents: (.components | length),
               componentsWithLicenses: ([.components[] | select(.licenses)] | length)
           }'
+
+          unlicensed=$(jq -r -f .github/scripts/unlicensed-packages.jq bom.json)
+          if [ -n "$unlicensed" ]; then
+            echo ""
+            echo "⚠️  Packages still without licence metadata:"
+            echo "$unlicensed"
+            echo "Verify each upstream, then add it to .github/license-overrides.json."
+          fi
 
       - name: Upload BOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@48feab3080ff9e8f51f4d21861d9fc914eb744f5 # v3.1.0

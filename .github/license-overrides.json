@@ -1,0 +1,42 @@
+{
+  "_comment": [
+    "SPDX licences for packages whose UPSTREAM metadata genuinely omits them, so no",
+    "scanner can resolve them. Consumed by .github/scripts/normalize-sbom.jq, which",
+    "injects these into the CycloneDX BOM before it is uploaded to Dependency-Track.",
+    "",
+    "Keys are exact PURLs (qualifiers ignored). Matching on the exact version is",
+    "deliberate: on a version bump the override stops applying and the",
+    "'No License Metadata' warning returns, prompting a fresh check rather than",
+    "silently carrying an old assertion forward.",
+    "",
+    "Every entry records where the licence was verified. Do not add an entry without",
+    "one."
+  ],
+  "overrides": {
+    "pkg:gem/fast-polylines@2.2.0": {
+      "id": "MIT",
+      "verified": "https://rubygems.org/api/v2/rubygems/fast-polylines/versions/2.2.0.json",
+      "note": "Gemfile.lock carries no licence data and CI does not run bundle install, so no gemspec exists on disk to read."
+    },
+    "pkg:gem/httparty@0.21.0": {
+      "id": "MIT",
+      "verified": "https://rubygems.org/api/v2/rubygems/httparty/versions/0.21.0.json",
+      "note": "As above."
+    },
+    "pkg:gem/mini_mime@1.1.5": {
+      "id": "MIT",
+      "verified": "https://rubygems.org/api/v2/rubygems/mini_mime/versions/1.1.5.json",
+      "note": "As above."
+    },
+    "pkg:gem/multi_xml@0.6.0": {
+      "id": "MIT",
+      "verified": "https://rubygems.org/api/v2/rubygems/multi_xml/versions/0.6.0.json",
+      "note": "As above."
+    },
+    "pkg:npm/polyline@0.2.0": {
+      "id": "BSD-3-Clause",
+      "verified": "https://raw.githubusercontent.com/mapbox/polyline/master/LICENSE",
+      "note": "Publishes no 'license' field on npm at any version. Upstream LICENSE is a 3-clause BSD (Development Seed). Package is deprecated in favour of @mapbox/polyline, which also omits the field."
+    }
+  }
+}
