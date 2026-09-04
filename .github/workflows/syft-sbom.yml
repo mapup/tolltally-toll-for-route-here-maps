@@ -14,6 +14,10 @@ name: Syft SBOM Generation
 # Optional secrets (steps skip gracefully when unset):
 #   DEPENDENCYTRACK_API_KEY - SBOM upload to Dependency-Track
 #   GCHAT_WEBHOOK_URL       - failure alerts
+#
+# LOCAL DEVIATION FROM THE TEMPLATE: the SBOM normalisation step below calls
+# .github/scripts/normalize-sbom.jq with .github/license-overrides.json. Carry
+# both files along when syncing this workflow, or drop that step.
 
 on:
   # No branch filter: repos differ in default-branch names. Pushes are
@@ -44,6 +48,23 @@ jobs:
           format: cyclonedx-json
           output-file: syft-sbom.json
           upload-artifact: false
+
+      - name: Normalise SBOM
+        run: |
+          echo "🧹 Normalising SBOM (dropping manifest files, filling licence gaps)..."
+          jq --slurpfile ov .github/license-overrides.json \
+             -f .github/scripts/normalize-sbom.jq \
+             syft-sbom.json > syft-sbom.normalised.json
+          mv syft-sbom.normalised.json syft-sbom.json
+
+          unlicensed=$(jq -r -f .github/scripts/unlicensed-packages.jq syft-sbom.json)
+          if [ -n "$unlicensed" ]; then
+            echo "⚠️  Packages still without licence metadata:"
+            echo "$unlicensed"
+            echo "Verify each upstream, then add it to .github/license-overrides.json."
+          else
+            echo "All packages carry licence metadata."
+          fi
 
       - name: Check SBOM and Dependency-Track key
         id: sbom_check
